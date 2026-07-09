@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ARCHIVE</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;500;700&family=Noto+Sans+KR:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap');
+
+:root {
+  --bg-primary: #121212;
+  --text-primary: #ede7da;
+  --accent: #c9a227;
+  --accent-deep: #7a1f1f;
+  --font-serif: 'Noto Serif KR', serif;
+  --font-sans: 'Noto Sans KR', sans-serif;
+  --font-mono: 'IBM Plex Mono', monospace;
+}
+* { box-sizing: border-box; }
+html, body {
+  margin: 0; padding: 0;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+}
+body { min-height: 100vh; min-height: 100dvh; }
+a { color: inherit; text-decoration: none; }
+
+.intro-wrap {
+  max-width: 480px;
+  margin: 0 auto;
+  min-height: 100dvh;
+  padding: 48px 28px 40px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+.intro-mark {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.18em;
+  color: var(--accent);
+  margin-bottom: 28px;
+}
+.intro-title {
+  font-family: var(--font-serif);
+  font-weight: 700;
+  font-size: 28px;
+  line-height: 1.4;
+  margin: 0 0 36px;
+  position: relative;
+  display: inline-block;
+}
+.intro-title.glitch { animation: glitchFlicker 900ms steps(2, end) 1; }
+.intro-title.glitch::before,
+.intro-title.glitch::after {
+  content: attr(data-text);
+  position: absolute; left: 0; top: 0; width: 100%; opacity: 0;
+}
+.intro-title.glitch::before { color: #7fd6c9; animation: glitchLayer1 900ms steps(2, end) 1; }
+.intro-title.glitch::after { color: var(--accent-deep); animation: glitchLayer2 900ms steps(2, end) 1; }
+@keyframes glitchFlicker {
+  0% { opacity: 0; transform: translate(0,0); }
+  10% { opacity: 1; transform: translate(-2px,1px); }
+  20% { transform: translate(2px,-1px); }
+  30% { transform: translate(-1px,0); }
+  100% { opacity: 1; transform: translate(0,0); }
+}
+@keyframes glitchLayer1 {
+  0% { opacity: 0; } 15% { opacity: .7; transform: translate(3px,-1px); } 30% { opacity: 0; } 100% { opacity: 0; }
+}
+@keyframes glitchLayer2 {
+  0% { opacity: 0; } 22% { opacity: .6; transform: translate(-3px,1px); } 38% { opacity: 0; } 100% { opacity: 0; }
+}
+.intro-body p {
+  font-family: var(--font-serif);
+  font-size: 15px;
+  line-height: 1.9;
+  margin: 0 0 22px;
+}
+.intro-body .num { font-family: var(--font-mono); color: var(--accent); margin-right: 6px; }
+.intro-cta {
+  margin-top: 40px;
+  width: 100%;
+  padding: 18px 20px;
+  background: var(--accent);
+  color: #17140c;
+  border: none;
+  border-radius: 2px;
+  font-family: var(--font-mono);
+  font-size: 15px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.intro-cta:active { transform: translateY(1px); }
+</style>
+</head>
+<body>
+
+<div class="intro-wrap">
+  <div>
+    <div class="intro-mark">FIELD ARCHIVE / SEOUL</div>
+    <h1 class="intro-title glitch" data-text="아카이브">아카이브</h1>
+
+    <div class="intro-body">
+      <p><span class="num">1.</span>갑자기 나타난, 이해할 수 없는, 뜬금없고 모순적인, 화면이 튀어 잠깐 오류가 나듯 이상한, 눈을 쩍쩍 비비게하는 기이한 위치에 있는 모든 사물은 깊습니다.</p>
+      <p><span class="num">2.</span>지나치게 통속적이라 불리는 모든 텍스트에는 시대정신이 그토록 미워하는 시대현실이 묻어있습니다. 시대현실은 보이는 것이라 좋습니다.</p>
+      <p>내가 기억하는 것들은 모두 그런 것들입니다.<br>
+      깊은 것을 물고 늘어져야만 사는, 봐야만 아는 사람들이 분명 있습니다.<br>
+      나를 포함한 그들이 잘 숨을 쉬게 아카이브를 만들었습니다.</p>
+    </div>
+  </div>
+
+  <a class="intro-cta" href="archive.html">
+    <span>아카이브 들어가기</span>
+    <span>&rarr;</span>
+  </a>
+</div>
+
+</body>
+</html>

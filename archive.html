@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ARCHIVE — 목록</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;500;700&family=Noto+Sans+KR:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap');
+
+:root {
+  --bg-primary: #121212;
+  --bg-secondary: #1c1b19;
+  --bg-card: #201f1c;
+  --text-primary: #ede7da;
+  --text-muted: #8c887e;
+  --accent: #c9a227;
+  --border: #3a3733;
+  --font-serif: 'Noto Serif KR', serif;
+  --font-sans: 'Noto Sans KR', sans-serif;
+  --font-mono: 'IBM Plex Mono', monospace;
+}
+* { box-sizing: border-box; }
+html, body { margin:0; padding:0; background: var(--bg-primary); color: var(--text-primary); font-family: var(--font-sans); }
+a { color: inherit; text-decoration: none; }
+
+.archive-header {
+  position: sticky; top: 0; z-index: 5;
+  background: linear-gradient(var(--bg-primary) 70%, transparent);
+  padding: 18px 20px 14px;
+  font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.1em; color: var(--text-muted);
+  display: flex; align-items: baseline; justify-content: space-between;
+}
+.archive-header span.count { color: var(--accent); }
+
+.view { display: none; padding-bottom: 120px; }
+.view.active { display: block; }
+
+#view-grid { display: none; grid-template-columns: repeat(3, 1fr); gap: 2px; padding: 0 2px; }
+#view-grid.active { display: grid; }
+.grid-item { position: relative; aspect-ratio: 1/1; overflow: hidden; background: var(--bg-secondary); }
+.grid-item img { width:100%; height:100%; object-fit:cover; display:block; filter: saturate(0.9); }
+.grid-item .grid-label { position:absolute; left:6px; bottom:6px; font-family: var(--font-mono); font-size:10px; color:#fff; text-shadow: 0 1px 3px rgba(0,0,0,.8); }
+
+#view-list.active { display: block; }
+.list-item { display:flex; gap:14px; padding:16px 20px; border-bottom:1px solid var(--border); }
+.list-thumb { width:64px; height:64px; flex-shrink:0; object-fit:cover; background: var(--bg-secondary); }
+.list-info { min-width:0; }
+.list-title { font-family: var(--font-serif); font-size:16px; font-weight:700; margin:0 0 6px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.list-addr { font-family: var(--font-mono); font-size:11px; color: var(--text-muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+
+#view-map.active { display: block; }
+#map-canvas { width:100%; height: calc(100dvh - 60px); }
+.leaflet-popup-content-wrapper { background: var(--bg-secondary); color: var(--text-primary); border-radius:2px; }
+.leaflet-popup-tip { background: var(--bg-secondary); }
+.popup-title { font-family: var(--font-serif); font-weight:700; font-size:14px; margin-bottom:4px; }
+.popup-link { font-family: var(--font-mono); font-size:11px; color: var(--accent); }
+
+.view-switch { position: fixed; right:18px; bottom:22px; z-index:20; display:flex; flex-direction:row-reverse; align-items:flex-end; }
+.view-switch button {
+  width:52px; height:52px; border:1px solid var(--border); background: var(--bg-card); color: var(--text-muted);
+  border-radius:3px; display:flex; align-items:center; justify-content:center;
+  box-shadow: 0 6px 14px rgba(0,0,0,.45); margin-left:-14px; transition: transform .15s ease;
+}
+.view-switch button:first-child { margin-left:0; }
+.view-switch button svg { width:20px; height:20px; }
+.view-switch button:nth-child(1) { transform: rotate(3deg) translateY(2px); }
+.view-switch button:nth-child(2) { transform: rotate(-2deg) translateY(4px); }
+.view-switch button:nth-child(3) { transform: rotate(2deg) translateY(6px); }
+.view-switch button.active {
+  background: var(--accent); color:#17140c; border-color: var(--accent);
+  transform: translateY(3px) scale(0.97) !important;
+  box-shadow: inset 0 2px 4px rgba(0,0,0,.35); z-index:5;
+}
+</style>
+</head>
+<body>
+
+<header class="archive-header">
+  <span>FIELD ARCHIVE</span>
+  <span class="count" id="post-count"></span>
+</header>
+
+<main>
+  <section class="view" id="view-list"></section>
+  <section class="view" id="view-grid"></section>
+  <section class="view" id="view-map">
+    <div id="map-canvas"></div>
+  </section>
+</main>
+
+<nav class="view-switch">
+  <button data-view="map" aria-label="지도로 보기">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s7-6.5 7-11.5A7 7 0 0 0 5 9.5C5 14.5 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.2"/></svg>
+  </button>
+  <button data-view="list" aria-label="글 목록으로 보기">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="18" x2="20" y2="18"/></svg>
+  </button>
+  <button data-view="grid" class="active" aria-label="사진 피드로 보기">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="6" height="6"/><rect x="9.5" y="3" width="6" height="6" transform="translate(6,0)"/><rect x="3" y="9.5" width="6" height="6"/></svg>
+  </button>
+</nav>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+/* ==========================================================
+   포스트 데이터 (하드코딩) — 새 포스트 추가하려면 이 배열에
+   객체를 하나 더 넣으면 됩니다. 이 스크립트는 archive.html과
+   post.html 양쪽에 똑같이 들어있으니, 포스트를 추가/수정할 때는
+   두 파일 모두에 같은 내용으로 반영해주세요.
+   ========================================================== */
+const POSTS = [
+  {
+    id: "001",
+    title: "옥상 위에 놓인 세탁기",
+    mainImage: "https://picsum.photos/seed/archive001/800/600",
+    address: "서울특별시 종로구 자하문로 10길",
+    lat: 37.5826, lng: 126.9701,
+    body: [
+      { type: "text", content: "3층짜리 상가 건물 옥상, 난간도 없는 자리에 드럼세탁기 한 대가 놓여 있었다. 전선은 허공에서 끊겨 있었고, 문은 열린 채로 비를 받고 있었다." },
+      { type: "image", src: "https://picsum.photos/seed/archive001b/900/600" },
+      { type: "text", content: "누가 왜 저기에 세탁기를 올려두었는지는 알 수 없다. 다만 이 도시는 설명되지 않는 사물을 아무렇지 않게 통과시킨다는 것만은 분명했다." }
+    ]
+  },
+  {
+    id: "002",
+    title: "반지하 창문의 화분들",
+    mainImage: "https://picsum.photos/seed/archive002/800/600",
+    address: "서울특별시 마포구 성지길",
+    lat: 37.5519, lng: 126.9376,
+    body: [
+      { type: "text", content: "지상에서 삼십 센티미터쯤 아래, 화분 여섯 개가 나란히 창턱에 줄지어 있었다. 해가 들지 않는 방향인데도 잎은 이상하리만치 진한 초록이었다." },
+      { type: "image", src: "https://picsum.photos/seed/archive002b/900/600" },
+      { type: "text", content: "지나가던 사람들은 대부분 눈높이보다 낮은 이 풍경을 보지 못하고 지나쳤다. 보려면 몸을 숙여야 하는 것들이 있다." }
+    ]
+  },
+  {
+    id: "003",
+    title: "공사장 가벽에 붙은 전단지",
+    mainImage: "https://picsum.photos/seed/archive003/800/600",
+    address: "서울특별시 영등포구 문래동",
+    lat: 37.5177, lng: 126.8946,
+    body: [
+      { type: "text", content: "철거 예정 표지판 바로 옆에 코팅도 안 된 전단지가 붙어 있었다. 잃어버린 고양이를 찾는다는 내용이었고, 연락처 아래에는 손글씨로 '아직 여기 있을지도 모릅니다'라고 적혀 있었다." },
+      { type: "image", src: "https://picsum.photos/seed/archive003b/900/600" },
+      { type: "text", content: "가벽은 곧 철거될 것이고 전단지도 함께 사라질 것이다. 그 사실이 이 문장을 여기에 옮겨 적어야 할 이유가 됐다." }
+    ]
+  }
+];
+
+function qs(sel, root) { return (root || document).querySelector(sel); }
+function qsa(sel, root) { return Array.from((root || document).querySelectorAll(sel)); }
+
+document.getElementById("post-count").textContent = POSTS.length + " POSTS";
+
+const gridEl = qs("#view-grid");
+const listEl = qs("#view-list");
+const mapButtons = qsa(".view-switch button");
+
+gridEl.innerHTML = POSTS.map(function (p) {
+  return '<a class="grid-item" href="post.html?id=' + p.id + '">' +
+    '<img src="' + p.mainImage + '" alt="' + p.title + '" loading="lazy">' +
+    '<span class="grid-label">' + p.id + '</span></a>';
+}).join("");
+gridEl.classList.add("active");
+
+listEl.innerHTML = POSTS.map(function (p) {
+  return '<a class="list-item" href="post.html?id=' + p.id + '">' +
+    '<img class="list-thumb" src="' + p.mainImage + '" alt="' + p.title + '" loading="lazy">' +
+    '<div class="list-info"><p class="list-title">' + p.title + '</p>' +
+    '<p class="list-addr">' + p.address + '</p></div></a>';
+}).join("");
+
+let mapInitialized = false;
+let mapInstance = null;
+
+function initArchiveMap() {
+  mapInstance = L.map("map-canvas", { zoomControl: true }).setView([POSTS[0].lat, POSTS[0].lng], 12);
+  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+    attribution: "&copy; OpenStreetMap contributors", maxZoom: 19
+  }).addTo(mapInstance);
+
+  const bounds = [];
+  POSTS.forEach(function (p) {
+    const marker = L.marker([p.lat, p.lng]).addTo(mapInstance);
+    marker.bindPopup('<div class="popup-title">' + p.title + '</div>' +
+      '<a class="popup-link" href="post.html?id=' + p.id + '">포스트 보기 →</a>');
+    bounds.push([p.lat, p.lng]);
+  });
+  if (bounds.length > 1) mapInstance.fitBounds(bounds, { padding: [40, 40] });
+  mapInitialized = true;
+  setTimeout(function () { mapInstance.invalidateSize(); }, 150);
+}
+
+mapButtons.forEach(function (btn) {
+  btn.addEventListener("click", function () {
+    const target = btn.getAttribute("data-view");
+    mapButtons.forEach(function (b) { b.classList.remove("active"); });
+    btn.classList.add("active");
+    qsa(".view").forEach(function (v) { v.classList.remove("active"); });
+    qs("#view-" + target).classList.add("active");
+    if (target === "map" && !mapInitialized) initArchiveMap();
+    else if (target === "map" && mapInstance) setTimeout(function(){ mapInstance.invalidateSize(); }, 100);
+  });
+});
+</script>
+</body>
+</html>
